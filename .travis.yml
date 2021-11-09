@@ -8,6 +8,6 @@ addons:
   chrome: stable
 sudo: required
 install:
-  - pnpm
+  - yarn
 script:
-  - pnpm test
+  - yarn test
