@@ -5,7 +5,7 @@ class Promise2 {
   resolve(result) {
     if (this.state !== "pending") return;
     this.state = "fulfilled";
-    setImmediate(() => {
+    setTimeout(() => {
       this.callbacks.forEach((handle) => {
         if (typeof handle[0] === "function") {
           const x = handle[0].bind(undefined)(result);
@@ -48,7 +48,7 @@ class Promise2 {
   reject(reason) {
     if (this.state !== "pending") return;
     this.state = "rejected";
-    setImmediate(() => {
+    setTimeout(() => {
       this.callbacks.forEach((handle) => {
         typeof handle[1] === "function" && handle[1].bind(undefined)(reason);
       });
