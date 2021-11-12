@@ -1,6 +1,7 @@
 // add all jest-extended matchers
 // @ts-ignore
 import * as matchers from "jest-extended";
+import { resolve } from "path/posix";
 expect.extend(matchers);
 import Promise from "../src/promise";
 
@@ -196,5 +197,26 @@ describe("Promise", () => {
       expect(callbacks[2]).toHaveBeenCalledAfter(callbacks[1]);
       done();
     });
+  });
+
+  it("2.2.7 then 必须返回一个 promise", () => {
+    const promise = new Promise((resolve) => resolve()).then(
+      () => {},
+      () => {}
+    );
+    expect(promise instanceof Promise).toBeTruthy();
+  });
+
+  it("2.2.7.1 如果 then(onFulfilled, onRejected) 返回一个值 x, 运行 [[Resolve]](promise2, x)", (done) => {
+    const promise1 = new Promise((resolve) => resolve());
+    promise1
+      .then(
+        () => "success",
+        () => {}
+      )
+      .then((result) => {
+        expect(result).toBe("success");
+        done();
+      });
   });
 });
