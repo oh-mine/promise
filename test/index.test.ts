@@ -1,7 +1,5 @@
-// add all jest-extended matchers
-// @ts-ignore
+// @ts-ignore add all jest-extended matchers
 import * as matchers from "jest-extended";
-import { resolve } from "path/posix";
 expect.extend(matchers);
 import Promise from "../src/promise";
 
@@ -217,6 +215,13 @@ describe("Promise", () => {
       .then((result) => {
         expect(result).toBe("success");
         done();
-      });
+      }, null);
+  });
+
+  it("then 穿透传递", (done) => {
+    new Promise((resolve) => resolve("success")).then().then((result) => {
+      expect(result).toBe("success");
+      done();
+    }, null);
   });
 });
