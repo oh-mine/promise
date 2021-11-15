@@ -1,7 +1,7 @@
 // @ts-ignore add all jest-extended matchers
 import * as matchers from "jest-extended";
 expect.extend(matchers);
-import Promise from "../src/promise";
+import Promise from "../src/promise3";
 
 describe("Promise", () => {
   it("is a class", () => {
@@ -25,7 +25,7 @@ describe("Promise", () => {
   });
 
   it("new Promise(fn) generates an object，and contains then function", () => {
-    const promise = new Promise(() => {});
+    const promise = new Promise(() => { });
     expect(promise.then).toBeInstanceOf(Function);
   });
 
@@ -199,24 +199,38 @@ describe("Promise", () => {
 
   it("2.2.7 then 必须返回一个 promise", () => {
     const promise = new Promise((resolve) => resolve()).then(
-      () => {},
-      () => {}
+      () => { },
+      () => { }
     );
     expect(promise instanceof Promise).toBeTruthy();
   });
 
-  it("2.2.7.1 如果 then(onFulfilled, onRejected) 返回一个值 x, 运行 [[Resolve]](promise2, x)", (done) => {
-    const promise1 = new Promise((resolve) => resolve());
-    promise1
-      .then(
-        () => "success",
-        () => {}
-      )
-      .then((result) => {
-        expect(result).toBe("success");
-        done();
-      }, null);
-  });
+  it("2.2.7.1 If promise and x refer to the same object, reject promise with a TypeError as the reason.", (done) => {
+    const promise1 = new Promise((resolve) => resolve())
+    const promise2 = promise1.then(() => promise2)
+    promise2.then(null, (reason) => {
+      expect(reason.message).toEqual(expect.stringContaining('Chaining cycle detected for promise #<Promise>'))
+      done()
+    })
+  })
+
+  it('2.2.7.1 If/when x is fulfilled, fulfill promise with the same value.', (done) => {
+    new Promise((resolve) => resolve())
+      .then(() => new Promise((resolve) => resolve('success')))
+      .then(result => {
+        expect(result).toBe('success')
+        done()
+      })
+  })
+
+  it('2.2.7.1 If/when x is rejected, reject promise with the same reason.', (done) => {
+    new Promise((resolve) => resolve())
+      .then(() => new Promise((resolve, reject) => reject('fail')))
+      .then(null, reason => {
+        expect(reason).toBe('fail')
+        done()
+      })
+  })
 
   it("then 穿透传递", (done) => {
     new Promise((resolve) => resolve("success")).then().then((result) => {
@@ -224,4 +238,82 @@ describe("Promise", () => {
       done();
     }, null);
   });
+
+  it("catch test", (done) => {
+    new Promise((resolve, reject) => reject('fail')).catch(reason => {
+      expect(reason).toBe('fail')
+      done()
+    })
+  })
+
+  it("static resolve test", (done) => {
+    Promise.resolve('success').then(result => {
+      expect(result).toBe('success')
+      done()
+    })
+  })
+
+  it("static reject test", (done) => {
+    Promise.reject('fail').catch(reason => {
+      expect(reason).toBe('fail')
+      done()
+    })
+  })
+
+  it("static all test(success)", (done) => {
+    const promises = [
+      Promise.resolve('success1'),
+      Promise.resolve('success2'),
+      Promise.resolve('success3')
+    ]
+    Promise.all(promises).then(result => {
+      const [a, b, c] = result
+      expect(a).toBe('success1')
+      expect(b).toBe('success2')
+      expect(c).toBe('success3')
+      done()
+    })
+  })
+
+  it("static all test(fail)", (done) => {
+    const promises = [
+      Promise.resolve('success'),
+      Promise.reject('fail'),
+    ]
+    Promise.all(promises).then(null, reason => {
+      expect(reason).toBe('fail')
+      done()
+    })
+  })
+
+  it("static race test", (done) => {
+    const promises = [
+      new Promise((resolve) => setTimeout(resolve, 500, 'success1')),
+      new Promise((resolve) => setTimeout(resolve, 100, 'success2'))
+    ]
+    Promise.race(promises).then((result) => {
+      expect(result).toBe('success2')
+      done()
+    });
+  })
+
+  it("finally test1", () => {
+    const fn1 = jest.fn()
+    const fn2 = jest.fn()
+    new Promise(resolve => resolve('success')).then(fn1).finally(fn2)
+    expect(fn2).toHaveBeenCalledAfter(fn1)
+  })
+
+  it("finally test2", () => {
+    const fn1 = jest.fn()
+    const fn2 = jest.fn()
+    new Promise(resolve => resolve('success')).finally(fn2).then(fn1)
+    expect(fn1).toHaveBeenCalledAfter(fn2)
+  })
+
+  it("finally test3", () => {
+    new Promise(resolve => resolve('success')).finally(() => { }).then((value) => {
+      expect(value).toBe('success')
+    })
+  })
 });

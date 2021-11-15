@@ -64,7 +64,7 @@ class Promise2 {
     const handle: Array<((data?: unknown) => {}) | Promise2> = [];
     typeof onFulfilled === "function" && (handle[0] = onFulfilled);
     typeof onRejected === "function" && (handle[1] = onRejected);
-    handle[2] = new Promise2(() => {});
+    handle[2] = new Promise2(() => { });
     this.callbacks.push(handle);
     return handle[2];
   }
