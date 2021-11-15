@@ -1,7 +1,21 @@
-class State {
-  static PENDING = 'pending'
-  static FULFILLED = 'fulfilled'
-  static REJECTED = 'rejected'
+enum State {
+  PENDING = 'pending',
+  FULFILLED = 'fulfilled',
+  REJECTED = 'rejected'
+}
+
+function nextTick(callback) {
+  if (process !== undefined && typeof process.nextTick === "function") {
+    return process.nextTick(callback)
+  } else {
+    let counter = 1
+    const observer = new MutationObserver(callback)
+    const textNode = document.createTextNode(String(counter))
+    observer.observe(textNode, { characterData: true })
+
+    counter += 1
+    textNode.data = String(counter)
+  }
 }
 
 class Promise2 {
@@ -16,7 +30,7 @@ class Promise2 {
     if (this.state !== State.PENDING) return
     this.state = State.FULFILLED
     this.value = result
-    setTimeout(() => {
+    nextTick(() => {
       this.callbacks.forEach(handle => {
         const x = handle[0].bind(undefined)(result);
         (handle[2] as Promise2).resolveWith(x)
@@ -58,7 +72,7 @@ class Promise2 {
     if (this.state !== State.PENDING) return
     this.state = State.REJECTED
     this.value = reason
-    setTimeout(() => {
+    nextTick(() => {
       this.callbacks.forEach(handle => {
         const x = handle[1].bind(undefined)(reason);
         (handle[2] as Promise2).resolveWith(x)
